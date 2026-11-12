@@ -28,4 +28,21 @@ final class HistoryStore {
         try { return new JSONArray(prefs.getString("history", "[]")); }
         catch (JSONException e) { return new JSONArray(); }
     }
+
+    boolean record(String id, Recognizer.Result answer) {
+        JSONArray previous = logs(), updated = new JSONArray();
+        Recognizer.Match top = answer.matches().isEmpty() ? null : answer.matches().get(0);
+        boolean accepted = top != null && top.score() >= 0.55f;
+        try {
+            updated.put(new JSONObject().put("id", id).put("date", System.currentTimeMillis())
+                    .put("plant", accepted ? catalog.speciesKey(top.scientific()) : "")
+                    .put("common", accepted ? top.common() : "").put("engine", answer.engine()));
+            for (int i = 0; i < Math.min(previous.length(), 199); i++) updated.put(previous.getJSONObject(i));
+            prefs.edit().putString("history", updated.toString()).apply();
+            for (int i = 199; i < previous.length(); i++) photos.delete(previous.optJSONObject(i));
+            return true;
+        } catch (JSONException e) {
+            return false;
+        }
+    }
 }
