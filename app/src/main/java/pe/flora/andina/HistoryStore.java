@@ -45,4 +45,23 @@ final class HistoryStore {
             return false;
         }
     }
+
+    void confirmMatch(String id, Recognizer.Match match, Consumer<String> onConfirmed) {
+        JSONArray rows = logs();
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject row = rows.optJSONObject(i);
+            if (!id.equals(row.optString("id"))) continue;
+            try {
+                String species = catalog.speciesKey(match.scientific());
+                row.put("plant", species).put("common", match.common());
+                prefs.edit().putString("history", rows.toString()).apply();
+                onConfirmed.accept(species);
+                Toast.makeText(context, "Planta guardada en el historial", Toast.LENGTH_SHORT).show();
+            } catch (JSONException e) {
+                Toast.makeText(context, "No se pudo guardar la planta", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+        Toast.makeText(context, "La consulta ya no está en el historial", Toast.LENGTH_SHORT).show();
+    }
 }
