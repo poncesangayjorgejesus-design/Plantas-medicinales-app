@@ -78,4 +78,25 @@ final class PlantCatalog {
         });
         refresh.run();
     }
+
+    void detail(JSONObject plant) {
+        String message = plant.optString("cientifico") + "\n" + plant.optString("familia") + "\n\n"
+                + "Distribución\n" + plant.optString("region") + "\n\n"
+                + "Uso tradicional documentado\n" + plant.optString("tradicion") + "\n\n"
+                + CAUTION + "\n\nFuente\n" + plant.optString("fuente");
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(plant.optString("nombre")).setMessage(message)
+                .setPositiveButton("Cerrar", null).setNeutralButton("Escuchar", null)
+                .setNegativeButton("Detener audio", null).create();
+        dialog.setOnDismissListener(ignored -> { if (voice != null) voice.stop(); });
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(view -> {
+            if (voiceReady) voice.speak(plant.optString("nombre") + ". " + message,
+                    TextToSpeech.QUEUE_FLUSH, null, "ficha");
+            else Toast.makeText(context, "Configura una voz en español en Android.", Toast.LENGTH_SHORT).show();
+        });
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(view -> {
+            if (voice != null) voice.stop();
+        });
+    }
 }
