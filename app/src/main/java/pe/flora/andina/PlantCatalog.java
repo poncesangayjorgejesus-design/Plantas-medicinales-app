@@ -18,4 +18,15 @@ final class PlantCatalog {
     private TextToSpeech voice;
     private boolean voiceReady;
 
+    PlantCatalog(Context context, ScreenUi ui) {
+        this.context = context;
+        this.ui = ui;
+        try { catalog = new JSONArray(Recognizer.read(context.getAssets().open("catalogo.json"))); }
+        catch (Exception e) { throw new IllegalStateException("Catálogo inválido", e); }
+        voice = new TextToSpeech(context, status -> {
+            if (status == TextToSpeech.SUCCESS && voice != null)
+                voiceReady = voice.setLanguage(new Locale("es", "PE")) >= 0;
+        });
+    }
+    
 }
