@@ -74,4 +74,129 @@ final class HistoryScreen {
             refresh.run();
         }, selected.getYear(), selected.getMonthValue() - 1, selected.getDayOfMonth()).show();
     }
+
+    private void renderHistory(LinearLayout rowsView) {
+        rowsView.removeAllViews();
+
+        JSONArray rows = store.logs();
+
+        List<JSONObject> filtered = new ArrayList<>();
+        Map<String, Integer> totals = new TreeMap<>();
+        Map<String, String> names = new HashMap<>();
+
+        ZoneId lima = ZoneId.of("America/Lima");
+        String query = PlantCatalog.normalize(historyQuery);
+
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject row = rows.optJSONObject(i);
+            String plant = row.optString("plant");
+
+            LocalDate date = Instant.ofEpochMilli(row.optLong("date"))
+                    .atZone(lima)
+                    .toLocalDate();
+
+            if (historyDate != null && !historyDate.equals(date)) {
+                continue;
+            }
+
+            String name = catalog.displayName(row);
+
+            if (!plant.isEmpty()) {
+                String species = catalog.speciesKey(plant);
+
+                totals.merge(species, 1, Integer::sum);
+                names.putIfAbsent(species, name);
+            }
+
+            if (PlantCatalog.normalize(name + " " + plant).contains(query)) {
+                filtered.add(row);
+            }
+        }
+
+        if (!totals.isEmpty()) {
+            LinearLayout stats = ui.card(rowsView, GREEN);
+
+            ui.label(stats, "Plantas más buscadas", 20, -1, true);
+
+            ui.label(
+                    stats,
+                    historyDate == null
+                            ? "Últimas 200 consultas"
+                            : "En la fecha seleccionada",
+                    14,
+                    0xffE1ECDD,
+                    false
+            );
+
+            totals.entrySet().stream()
+                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                    .limit(5)
+                    .forEach(row -> ui.label(
+                            stats,
+                            names.get(row.getKey()) + " · " + row.getValue(),
+                            16,
+                            -1,
+                            false
+                    ));
+        }
+
+        ui.label(rowsView, filtered.size() + " consultas", 16, GREEN, true);
+
+        DateFormat dates = DateFormat.getDateTimeInstance(
+                DateFormat.SHORT,
+                DateFormat.SHORT,
+                new Locale("es", "PE")
+        );
+
+        dates.setTimeZone(TimeZone.getTimeZone("America/Lima"));
+
+        for (JSONObject row : filtered) {
+            String plant = row.optString("plant");
+
+            LinearLayout entry = ui.card(rowsView, -1);
+
+            ui.label(
+                    entry,
+                    plant.isEmpty()
+                            ? "Resultado incierto"
+                            : catalog.displayName(row),
+                    18,
+                    INK,
+                    true
+            );
+
+            if (!plant.isEmpty() && !plant.equals(catalog.displayName(row))) {
+                ui.label(entry, plant, 15, GREEN, false);
+            }
+
+            ui.label(
+                    entry,
+                    dates.format(new Date(row.optLong("date")))
+                            + " · " + row.optString("engine"),
+                    14,
+                    GREEN,
+                    false
+            );
+
+            photos.show(entry, row);
+
+            JSONObject match = catalog.find(plant);
+
+            if (match != null) {
+                ui.action(entry, "Abrir ficha", () -> catalog.detail(match));
+            }
+        }
+
+        if (filtered.isEmpty()) {
+            ui.label(
+                    rowsView,
+                    rows.length() == 0
+                            ? "Aquí verás tus análisis de fotos."
+                            : "Sin consultas para esos filtros.",
+                    16,
+                    INK,
+                    false
+            );
+        }
+    }
 }
