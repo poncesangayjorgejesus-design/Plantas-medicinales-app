@@ -20,4 +20,14 @@ final class HistoryScreen {
     private final Runnable refresh;
     private LocalDate historyDate;
     private String historyQuery = "";
+
+    HistoryScreen(Context context, ScreenUi ui, HistoryStore store, PlantCatalog catalog,
+                  HistoryPhotos photos, Runnable refresh) {
+        this.context = context;
+        this.ui = ui;
+        this.store = store;
+        this.catalog = catalog;
+        this.photos = photos;
+        this.refresh = refresh;
+    }
 }
