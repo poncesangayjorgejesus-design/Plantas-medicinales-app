@@ -30,4 +30,14 @@ final class HistoryScreen {
         this.photos = photos;
         this.refresh = refresh;
     }
+
+    void addClearButton(LinearLayout page, Runnable afterClear) {
+        ui.action(page, "Borrar historial", () -> new AlertDialog.Builder(context)
+                .setTitle("Borrar todas las consultas")
+                .setMessage("Se eliminará el historial de este dispositivo.")
+                .setNegativeButton("Cancelar", null).setPositiveButton("Borrar", (d, which) -> {
+                    store.clear();
+                    afterClear.run();
+                }).show());
+    }
 }
