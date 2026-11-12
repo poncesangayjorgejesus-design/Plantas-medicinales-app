@@ -99,4 +99,17 @@ final class PlantCatalog {
             if (voice != null) voice.stop();
         });
     }
+
+    String speciesKey(String name) {
+        JSONObject plant = find(name);
+        return plant == null ? name.trim() : plant.optString("cientifico");
+    }
+
+    String displayName(JSONObject row) {
+        JSONObject plant = find(row.optString("plant"));
+        if (plant != null) return plant.optString("nombre");
+        String common = row.optString("common");
+        return common.isBlank() ? row.optString("plant") : common;
+    }
+
 }
