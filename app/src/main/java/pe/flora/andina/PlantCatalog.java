@@ -49,4 +49,33 @@ final class PlantCatalog {
         }
         return null;
     }
+
+    void explore(LinearLayout page) {
+        ui.label(page, "Catálogo medicinal", 30, INK, true);
+        EditText query = new EditText(context);
+        query.setSingleLine(true);
+        query.setHint("Nombre común o científico");
+        page.addView(query);
+        LinearLayout rows = ui.column();
+        page.addView(rows);
+        Runnable refresh = () -> {
+            rows.removeAllViews();
+            String search = normalize(query.getText().toString());
+            for (int i = 0; i < catalog.length(); i++) {
+                JSONObject plant = catalog.optJSONObject(i);
+                if (!normalize(plant.optString("nombre") + " " + plant.optString("cientifico")).contains(search)) continue;
+                LinearLayout item = ui.card(rows, -1);
+                ui.label(item, plant.optString("nombre"), 21, INK, true);
+                ui.label(item, plant.optString("cientifico"), 15, GREEN, false);
+                ui.action(item, "Abrir ficha", () -> detail(plant));
+            }
+            if (rows.getChildCount() == 0) ui.label(rows, "Sin coincidencias", 16, INK, false);
+        };
+        query.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) { refresh.run(); }
+            public void afterTextChanged(Editable value) {}
+        });
+        refresh.run();
+    }
 }
