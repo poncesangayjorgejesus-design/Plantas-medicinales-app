@@ -28,5 +28,25 @@ final class PlantCatalog {
                 voiceReady = voice.setLanguage(new Locale("es", "PE")) >= 0;
         });
     }
-    
+
+    void close() { if (voice != null) voice.shutdown(); }
+
+    static String normalize(String value) {
+        return Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT).trim();
+    }
+
+    JSONObject find(String scientific) {
+        for (int i = 0; i < catalog.length(); i++) {
+            JSONObject item = catalog.optJSONObject(i);
+            if (item.optString("cientifico").equalsIgnoreCase(scientific)) return item;
+            JSONArray aliases = item.optJSONArray("alias");
+            if (aliases != null) {
+                for (int j = 0; j < aliases.length(); j++) {
+                    if (aliases.optString(j).equalsIgnoreCase(scientific)) return item;
+                }
+            }
+        }
+        return null;
+    }
 }
