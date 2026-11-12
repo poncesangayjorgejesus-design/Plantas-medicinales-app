@@ -17,4 +17,15 @@ final class HistoryStore {
         this.catalog = catalog;
         this.photos = photos;
     }
+
+    void clear() {
+        JSONArray rows = logs();
+        prefs.edit().remove("history").apply();
+        for (int i = 0; i < rows.length(); i++) photos.delete(rows.optJSONObject(i));
+    }
+
+    JSONArray logs() {
+        try { return new JSONArray(prefs.getString("history", "[]")); }
+        catch (JSONException e) { return new JSONArray(); }
+    }
 }
