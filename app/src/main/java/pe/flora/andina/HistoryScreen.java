@@ -66,4 +66,12 @@ final class HistoryScreen {
         });
         renderHistory(rows);
     }
+
+    private void chooseHistoryDate() {
+        LocalDate selected = historyDate == null ? LocalDate.now(ZoneId.of("America/Lima")) : historyDate;
+        new DatePickerDialog(context, (picker, year, month, day) -> {
+            historyDate = LocalDate.of(year, month + 1, day);
+            refresh.run();
+        }, selected.getYear(), selected.getMonthValue() - 1, selected.getDayOfMonth()).show();
+    }
 }
