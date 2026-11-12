@@ -40,4 +40,30 @@ final class HistoryScreen {
                     afterClear.run();
                 }).show());
     }
+
+    void show(LinearLayout page) {
+        ui.label(page, "Historial de consultas", 30, INK, true);
+        EditText search = new EditText(context);
+        search.setSingleLine(true);
+        search.setHint("Buscar por nombre común o científico");
+        search.setText(historyQuery);
+        page.addView(search);
+        ui.action(page, historyDate == null ? "Filtrar por fecha" : "Fecha · " + historyDate.format(
+                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")), this::chooseHistoryDate);
+        if (historyDate != null) ui.action(page, "Ver todas las fechas", () -> {
+            historyDate = null;
+            refresh.run();
+        });
+        LinearLayout rows = ui.column();
+        page.addView(rows);
+        search.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence value, int start, int count, int after) {}
+            public void onTextChanged(CharSequence value, int start, int before, int count) {
+                historyQuery = value.toString();
+                renderHistory(rows);
+            }
+            public void afterTextChanged(Editable value) {}
+        });
+        renderHistory(rows);
+    }
 }
