@@ -1,3 +1,4 @@
+
 package pe.flora.andina;
 
 import android.app.Activity;
@@ -11,6 +12,8 @@ import java.util.function.Consumer;
 import java.util.UUID;
 import java.io.IOException;
 import static pe.flora.andina.ScreenUi.*;
+
+/** Flujo de análisis y resultados. Responsable: integrante 2. */
 final class RecognitionController {
     private final Activity activity;
     private final SharedPreferences prefs;
@@ -78,3 +81,28 @@ final class RecognitionController {
             if (!activity.isDestroyed() && !activity.isFinishing()) callback.run();
         });
     }
+
+    void showResults(LinearLayout page, Recognizer.Result result, PlantCatalog catalog,
+                     String resultId, String confirmedPlant, Consumer<Recognizer.Match> onConfirm) {
+        if (result != null) {
+            ui.label(page, "Coincidencias posibles · " + result.engine(), 20, INK, true);
+            if (confirmedPlant.isEmpty() && (result.matches().isEmpty() || result.matches().get(0).score() < 0.55f))
+                ui.label(page, "Resultado incierto. Prueba con una foto más cercana de una hoja o flor.", 16, INK, true);
+            for (Recognizer.Match match : result.matches()) {
+                JSONObject plant = catalog.find(match.scientific());
+                LinearLayout item = ui.card(page, -1);
+                String title = plant == null ? match.common() : plant.optString("nombre");
+                ui.label(item, title.isBlank() ? match.scientific() : title, 20, INK, true);
+                ui.label(item, match.scientific() + " · Puntaje " + Math.round(match.score() * 100) + "/100", 15, GREEN, false);
+                if (plant != null) ui.action(item, "Ver ficha", () -> catalog.detail(plant));
+                else ui.label(item, "Especie sin ficha en el catálogo local.", 14, INK, false);
+                if (!resultId.isEmpty()) {
+                    boolean chosen = confirmedPlant.equals(catalog.speciesKey(match.scientific()));
+                    ui.action(item, chosen ? "Guardada en el historial" : "Guardar esta planta",
+                            () -> onConfirm.accept(match)).setEnabled(!chosen);
+                }
+            }
+            ui.label(page, PlantCatalog.CAUTION, 14, INK, false);
+        }
+    }
+}
