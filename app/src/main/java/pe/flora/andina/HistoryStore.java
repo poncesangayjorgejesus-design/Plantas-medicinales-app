@@ -1,3 +1,4 @@
+
 package pe.flora.andina;
 
 import android.content.Context;
@@ -11,7 +12,9 @@ final class HistoryStore {
     private final SharedPreferences prefs;
     private final PlantCatalog catalog;
     private final PhotoStore photos;
-    HistoryStore(Context context, SharedPreferences prefs, PlantCatalog catalog, PhotoStore photos) {
+
+    HistoryStore(Context context, SharedPreferences prefs,
+                 PlantCatalog catalog, PhotoStore photos) {
         this.context = context;
         this.prefs = prefs;
         this.catalog = catalog;
@@ -21,47 +24,113 @@ final class HistoryStore {
     void clear() {
         JSONArray rows = logs();
         prefs.edit().remove("history").apply();
-        for (int i = 0; i < rows.length(); i++) photos.delete(rows.optJSONObject(i));
+        for (int i = 0; i < rows.length(); i++)
+            photos.delete(rows.optJSONObject(i));
     }
 
     JSONArray logs() {
-        try { return new JSONArray(prefs.getString("history", "[]")); }
-        catch (JSONException e) { return new JSONArray(); }
+        try {
+            return new JSONArray(prefs.getString("history", "[]"));
+        } catch (JSONException e) {
+            return new JSONArray();
+        }
     }
 
     boolean record(String id, Recognizer.Result answer) {
         JSONArray previous = logs(), updated = new JSONArray();
-        Recognizer.Match top = answer.matches().isEmpty() ? null : answer.matches().get(0);
+        Recognizer.Match top = answer.matches().isEmpty()
+                ? null : answer.matches().get(0);
         boolean accepted = top != null && top.score() >= 0.55f;
+
         try {
-            updated.put(new JSONObject().put("id", id).put("date", System.currentTimeMillis())
-                    .put("plant", accepted ? catalog.speciesKey(top.scientific()) : "")
-                    .put("common", accepted ? top.common() : "").put("engine", answer.engine()));
-            for (int i = 0; i < Math.min(previous.length(), 199); i++) updated.put(previous.getJSONObject(i));
-            prefs.edit().putString("history", updated.toString()).apply();
-            for (int i = 199; i < previous.length(); i++) photos.delete(previous.optJSONObject(i));
+            updated.put(new JSONObject()
+                    .put("id", id)
+                    .put("date", System.currentTimeMillis())
+                    .put("plant", accepted
+                            ? catalog.speciesKey(top.scientific()) : "")
+                    .put("common", accepted ? top.common() : "")
+                    .put("engine", answer.engine()));
+
+            for (int i = 0; i < Math.min(previous.length(), 199); i++)
+                updated.put(previous.getJSONObject(i));
+
+            prefs.edit()
+                    .putString("history", updated.toString())
+                    .apply();
+
+            for (int i = 199; i < previous.length(); i++)
+                photos.delete(previous.optJSONObject(i));
+
             return true;
         } catch (JSONException e) {
             return false;
         }
     }
 
-    void confirmMatch(String id, Recognizer.Match match, Consumer<String> onConfirmed) {
+    // NUEVA FUNCION: ELIMINAR UNA SOLA CONSULTA
+    boolean deleteOne(String id) {
+        if (id == null || id.isEmpty()) return false;
+
+        JSONArray previous = logs();
+        JSONArray remaining = new JSONArray();
+        JSONObject removed = null;
+
+        for (int i = 0; i < previous.length(); i++) {
+            JSONObject row = previous.optJSONObject(i);
+
+            if (removed == null && row != null
+                    && id.equals(row.optString("id"))) {
+                removed = row;
+            } else {
+                remaining.put(previous.opt(i));
+            }
+        }
+
+        if (removed == null) return false;
+
+        boolean saved = prefs.edit()
+                .putString("history", remaining.toString())
+                .commit();
+
+        if (saved) photos.delete(removed);
+
+        return saved;
+    }
+
+    void confirmMatch(String id, Recognizer.Match match,
+                      Consumer<String> onConfirmed) {
         JSONArray rows = logs();
+
         for (int i = 0; i < rows.length(); i++) {
             JSONObject row = rows.optJSONObject(i);
             if (!id.equals(row.optString("id"))) continue;
+
             try {
                 String species = catalog.speciesKey(match.scientific());
-                row.put("plant", species).put("common", match.common());
-                prefs.edit().putString("history", rows.toString()).apply();
+
+                row.put("plant", species)
+                        .put("common", match.common());
+
+                prefs.edit()
+                        .putString("history", rows.toString())
+                        .apply();
+
                 onConfirmed.accept(species);
-                Toast.makeText(context, "Planta guardada en el historial", Toast.LENGTH_SHORT).show();
+
+                Toast.makeText(context,
+                        "Planta guardada en el historial",
+                        Toast.LENGTH_SHORT).show();
+
             } catch (JSONException e) {
-                Toast.makeText(context, "No se pudo guardar la planta", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,
+                        "No se pudo guardar la planta",
+                        Toast.LENGTH_SHORT).show();
             }
             return;
         }
-        Toast.makeText(context, "La consulta ya no está en el historial", Toast.LENGTH_SHORT).show();
+
+        Toast.makeText(context,
+                "La consulta ya no está en el historial",
+                Toast.LENGTH_SHORT).show();
     }
 }
