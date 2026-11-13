@@ -1,3 +1,4 @@
+
 package pe.flora.andina;
 
 import android.app.AlertDialog;
@@ -35,7 +36,8 @@ final class HistoryScreen {
         ui.action(page, "Borrar historial", () -> new AlertDialog.Builder(context)
                 .setTitle("Borrar todas las consultas")
                 .setMessage("Se eliminará el historial de este dispositivo.")
-                .setNegativeButton("Cancelar", null).setPositiveButton("Borrar", (d, which) -> {
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Borrar", (d, which) -> {
                     store.clear();
                     afterClear.run();
                 }).show());
@@ -43,36 +45,60 @@ final class HistoryScreen {
 
     void show(LinearLayout page) {
         ui.label(page, "Historial de consultas", 30, INK, true);
+
         EditText search = new EditText(context);
         search.setSingleLine(true);
         search.setHint("Buscar por nombre común o científico");
         search.setText(historyQuery);
         page.addView(search);
-        ui.action(page, historyDate == null ? "Filtrar por fecha" : "Fecha · " + historyDate.format(
-                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")), this::chooseHistoryDate);
-        if (historyDate != null) ui.action(page, "Ver todas las fechas", () -> {
-            historyDate = null;
-            refresh.run();
-        });
+
+        ui.action(page, historyDate == null
+                        ? "Filtrar por fecha"
+                        : "Fecha · " + historyDate.format(
+                        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                this::chooseHistoryDate);
+
+        if (historyDate != null) {
+            ui.action(page, "Ver todas las fechas", () -> {
+                historyDate = null;
+                refresh.run();
+            });
+        }
+
         LinearLayout rows = ui.column();
         page.addView(rows);
+
         search.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence value, int start, int count, int after) {}
-            public void onTextChanged(CharSequence value, int start, int before, int count) {
+            public void beforeTextChanged(
+                    CharSequence value, int start, int count, int after) {}
+
+            public void onTextChanged(
+                    CharSequence value, int start, int before, int count) {
                 historyQuery = value.toString();
                 renderHistory(rows);
             }
+
             public void afterTextChanged(Editable value) {}
         });
+
         renderHistory(rows);
     }
 
     private void chooseHistoryDate() {
-        LocalDate selected = historyDate == null ? LocalDate.now(ZoneId.of("America/Lima")) : historyDate;
-        new DatePickerDialog(context, (picker, year, month, day) -> {
-            historyDate = LocalDate.of(year, month + 1, day);
-            refresh.run();
-        }, selected.getYear(), selected.getMonthValue() - 1, selected.getDayOfMonth()).show();
+        LocalDate selected = historyDate == null
+                ? LocalDate.now(ZoneId.of("America/Lima"))
+                : historyDate;
+
+        new DatePickerDialog(
+                context,
+                (picker, year, month, day) -> {
+                    historyDate = LocalDate.of(year, month + 1, day);
+                    refresh.run();
+                },
+                selected.getYear(),
+                selected.getMonthValue() - 1,
+                selected.getDayOfMonth()
+        ).show();
     }
 
     private void renderHistory(LinearLayout rowsView) {
@@ -89,57 +115,53 @@ final class HistoryScreen {
 
         for (int i = 0; i < rows.length(); i++) {
             JSONObject row = rows.optJSONObject(i);
+            if (row == null) continue;
+
             String plant = row.optString("plant");
 
-            LocalDate date = Instant.ofEpochMilli(row.optLong("date"))
+            LocalDate date = Instant.ofEpochMilli(
+                            row.optLong("date"))
                     .atZone(lima)
                     .toLocalDate();
-            if (historyDate != null && !historyDate.equals(date)) {
+
+            if (historyDate != null
+                    && !historyDate.equals(date)) {
                 continue;
             }
 
             String name = catalog.displayName(row);
 
+            // Aplica los filtros al historial y al grafico.
+            if (!PlantCatalog.normalize(name + " " + plant)
+                    .contains(query)) {
+                continue;
+            }
+
+            filtered.add(row);
+
+            // Cuenta solo identificaciones confirmadas.
             if (!plant.isEmpty()) {
                 String species = catalog.speciesKey(plant);
 
                 totals.merge(species, 1, Integer::sum);
                 names.putIfAbsent(species, name);
             }
-
-            if (PlantCatalog.normalize(name + " " + plant).contains(query)) {
-                filtered.add(row);
-            }
         }
 
-        if (!totals.isEmpty()) {
-            LinearLayout stats = ui.card(rowsView, GREEN);
+        // NUEVO: grafico de barras Top 5.
+        PlantCharts.showTopFive(
+                context,
+                ui,
+                rowsView,
+                totals,
+                names
+        );
 
-            ui.label(stats, "Plantas más buscadas", 20, -1, true);
-
-            ui.label(
-                    stats,
-                    historyDate == null
-                            ? "Últimas 200 consultas"
-                            : "En la fecha seleccionada",
-                    14,
-                    0xffE1ECDD,
-                    false
-            );
-
-            totals.entrySet().stream()
-                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                    .limit(5)
-                    .forEach(row -> ui.label(
-                            stats,
-                            names.get(row.getKey()) + " · " + row.getValue(),
-                            16,
-                            -1,
-                            false
-                    ));
-        }
-
-        ui.label(rowsView, filtered.size() + " consultas", 16, GREEN, true);
+        ui.label(
+                rowsView,
+                filtered.size() + " consultas",
+                16, GREEN, true
+        );
 
         DateFormat dates = DateFormat.getDateTimeInstance(
                 DateFormat.SHORT,
@@ -147,7 +169,9 @@ final class HistoryScreen {
                 new Locale("es", "PE")
         );
 
-        dates.setTimeZone(TimeZone.getTimeZone("America/Lima"));
+        dates.setTimeZone(
+                TimeZone.getTimeZone("America/Lima")
+        );
 
         for (JSONObject row : filtered) {
             String plant = row.optString("plant");
@@ -159,12 +183,11 @@ final class HistoryScreen {
                     plant.isEmpty()
                             ? "Resultado incierto"
                             : catalog.displayName(row),
-                    18,
-                    INK,
-                    true
+                    18, INK, true
             );
 
-            if (!plant.isEmpty() && !plant.equals(catalog.displayName(row))) {
+            if (!plant.isEmpty()
+                    && !plant.equals(catalog.displayName(row))) {
                 ui.label(entry, plant, 15, GREEN, false);
             }
 
@@ -172,37 +195,58 @@ final class HistoryScreen {
                     entry,
                     dates.format(new Date(row.optLong("date")))
                             + " · " + row.optString("engine"),
-                    14,
-                    GREEN,
-                    false
+                    14, GREEN, false
             );
 
+            // Fotografia de la consulta.
             photos.show(entry, row);
 
+            // Acceso a la ficha de la planta.
             JSONObject match = catalog.find(plant);
 
             if (match != null) {
-                ui.action(entry, "Abrir ficha", () -> catalog.detail(match));
+                ui.action(
+                        entry,
+                        "Abrir ficha",
+                        () -> catalog.detail(match)
+                );
             }
 
-            // Permite eliminar una sola consulta, conservando las demás.
+            // Eliminar solamente esta consulta.
             String consultationId = row.optString("id");
+
             if (!consultationId.isEmpty()) {
                 ui.action(entry, "Eliminar consulta", () ->
                         new AlertDialog.Builder(context)
                                 .setTitle("Eliminar consulta")
-                                .setMessage("¿Eliminar esta consulta y su fotografía? "
-                                        + "Las demás consultas se conservarán.")
+                                .setMessage(
+                                        "¿Eliminar esta consulta y su fotografía? "
+                                                + "Las demás consultas se conservarán."
+                                )
                                 .setNegativeButton("Cancelar", null)
-                                .setPositiveButton("Eliminar", (dialog, which) -> {
-                                    if (store.deleteOne(consultationId)) {
-                                        Toast.makeText(context, "Consulta eliminada", Toast.LENGTH_SHORT).show();
-                                        renderHistory(rowsView);
-                                    } else {
-                                        Toast.makeText(context, "No se pudo eliminar la consulta", Toast.LENGTH_LONG).show();
-                                    }
-                                })
-                                .show());
+                                .setPositiveButton(
+                                        "Eliminar",
+                                        (dialog, which) -> {
+                                            if (store.deleteOne(consultationId)) {
+                                                Toast.makeText(
+                                                        context,
+                                                        "Consulta eliminada",
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
+
+                                                // Actualizar historial y grafico.
+                                                renderHistory(rowsView);
+                                            } else {
+                                                Toast.makeText(
+                                                        context,
+                                                        "No se pudo eliminar la consulta",
+                                                        Toast.LENGTH_LONG
+                                                ).show();
+                                            }
+                                        }
+                                )
+                                .show()
+                );
             }
         }
 
