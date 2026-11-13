@@ -73,7 +73,7 @@ public class MainActivity extends ComponentActivity {
         root.setOnApplyWindowInsetsListener((view, insets) -> {
             view.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
                     insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
-            return insets.consumeSystemWindowInsets();
+            return insets.  consumeSystemWindowInsets();
         });
         setContentView(root);
         root.requestApplyInsets();
