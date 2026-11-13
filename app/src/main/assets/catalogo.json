@@ -1,11 +1,10 @@
 [
   {
     "nombre": "Menta piperita",
-    "cientifico": "Mentha × piperita",
-    "familia": "Lamiaceae",
+    "cientifico": "Nombre cientifico: Mentha × piperita",
+    "familia": "De la familia: Lamiaceae",
     "region": "Híbrido cultivado en regiones templadas.",
     "tradicion": "Las hojas se documentan en preparados tradicionales para molestias digestivas leves.",
-    "fuente": "https://www.ema.europa.eu/en/medicines/herbal/menthae-piperitae-folium",
     "alias": [
       "Mentha x piperita",
       "Mentha piperita"
@@ -13,48 +12,43 @@
   },
   {
     "nombre": "Manzanilla alemana",
-    "cientifico": "Matricaria chamomilla",
-    "familia": "Asteraceae",
+    "cientifico": "Nombre cientifico: Matricaria chamomilla",
+    "familia": "De la familia: Asteraceae",
     "region": "Originaria de Eurasia y cultivada en distintas regiones.",
     "tradicion": "La flor se documenta en preparados tradicionales para molestias digestivas leves. La monografía usa el sinónimo Matricaria recutita.",
-    "fuente": "https://www.ema.europa.eu/en/medicines/herbal/matricariae-flos",
     "alias": [
       "Matricaria recutita"
     ]
   },
   {
     "nombre": "Romero",
-    "cientifico": "Salvia rosmarinus",
-    "familia": "Lamiaceae",
+    "cientifico": "Nombre cientifico: Salvia rosmarinus",
+    "familia": "De la familia: Lamiaceae",
     "region": "Originario de la región mediterránea y cultivado en jardines de climas templados.",
     "tradicion": "La hoja se documenta en preparados tradicionales para molestias digestivas leves. La monografía usa el sinónimo Rosmarinus officinalis.",
-    "fuente": "https://www.ema.europa.eu/en/medicines/herbal/rosmarini-folium",
     "alias": [
       "Rosmarinus officinalis"
     ]
   },
   {
     "nombre": "Eucalipto azul",
-    "cientifico": "Eucalyptus globulus",
-    "familia": "Myrtaceae",
+    "cientifico": "Nombre cientifico: Eucalyptus globulus",
+    "familia": "De la familia: Myrtaceae",
     "region": "Originario del sureste de Australia, introducido y cultivado en otros continentes.",
-    "tradicion": "Las hojas se documentan en preparados tradicionales para la tos asociada al resfriado.",
-    "fuente": "https://www.ema.europa.eu/en/medicines/herbal/eucalypti-folium"
+    "tradicion": "Las hojas se documentan en preparados tradicionales para la tos asociada al resfriado."
   },
   {
     "nombre": "Hinojo",
-    "cientifico": "Foeniculum vulgare",
-    "familia": "Apiaceae",
+    "cientifico": "Nombre cientifico: Foeniculum vulgare",
+    "familia": "De la familia: Apiaceae",
     "region": "De origen mediterráneo y cultivado en distintas regiones.",
-    "tradicion": "El fruto de la variedad dulce se documenta en preparados tradicionales para molestias digestivas leves como la hinchazón.",
-    "fuente": "https://www.ema.europa.eu/en/medicines/herbal/foeniculi-dulcis-fructus"
+    "tradicion": "El fruto de la variedad dulce se documenta en preparados tradicionales para molestias digestivas leves como la hinchazón."
   },
   {
     "nombre": "Toronjil",
-    "cientifico": "Melissa officinalis",
-    "familia": "Lamiaceae",
+    "cientifico": "Nombre cientifico: Melissa officinalis",
+    "familia": "De la familia: Lamiaceae",
     "region": "Originario de la región mediterránea y Asia occidental, cultivado en otras regiones.",
-    "tradicion": "Las hojas se documentan en preparados tradicionales para síntomas leves de estrés y como ayuda para dormir.",
-    "fuente": "https://www.ema.europa.eu/en/medicines/herbal/melissae-folium"
+    "tradicion": "Las hojas se documentan en preparados tradicionales para síntomas leves de estrés y como ayuda para dormir."
   }
 ]

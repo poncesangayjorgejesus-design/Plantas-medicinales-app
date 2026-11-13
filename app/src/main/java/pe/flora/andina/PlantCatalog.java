@@ -83,10 +83,11 @@ final class PlantCatalog {
         String message = plant.optString("cientifico") + "\n" + plant.optString("familia") + "\n\n"
                 + "Distribución\n" + plant.optString("region") + "\n\n"
                 + "Uso tradicional documentado\n" + plant.optString("tradicion") + "\n\n"
-                + CAUTION + "\n\nFuente\n" + plant.optString("fuente");
+                + CAUTION + "\n\n\n" + plant.optString("");
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle(plant.optString("nombre")).setMessage(message)
-                .setPositiveButton("Cerrar", null).setNeutralButton("Escuchar", null)
+                .setPositiveButton("Cerrar", null)
+                .setNeutralButton("Escuchar", null)
                 .setNegativeButton("Detener audio", null).create();
         dialog.setOnDismissListener(ignored -> { if (voice != null) voice.stop(); });
         dialog.show();
