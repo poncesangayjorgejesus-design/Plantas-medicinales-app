@@ -94,7 +94,6 @@ final class HistoryScreen {
             LocalDate date = Instant.ofEpochMilli(row.optLong("date"))
                     .atZone(lima)
                     .toLocalDate();
-
             if (historyDate != null && !historyDate.equals(date)) {
                 continue;
             }
@@ -184,6 +183,26 @@ final class HistoryScreen {
 
             if (match != null) {
                 ui.action(entry, "Abrir ficha", () -> catalog.detail(match));
+            }
+
+            // Permite eliminar una sola consulta, conservando las demás.
+            String consultationId = row.optString("id");
+            if (!consultationId.isEmpty()) {
+                ui.action(entry, "Eliminar consulta", () ->
+                        new AlertDialog.Builder(context)
+                                .setTitle("Eliminar consulta")
+                                .setMessage("¿Eliminar esta consulta y su fotografía? "
+                                        + "Las demás consultas se conservarán.")
+                                .setNegativeButton("Cancelar", null)
+                                .setPositiveButton("Eliminar", (dialog, which) -> {
+                                    if (store.deleteOne(consultationId)) {
+                                        Toast.makeText(context, "Consulta eliminada", Toast.LENGTH_SHORT).show();
+                                        renderHistory(rowsView);
+                                    } else {
+                                        Toast.makeText(context, "No se pudo eliminar la consulta", Toast.LENGTH_LONG).show();
+                                    }
+                                })
+                                .show());
             }
         }
 
