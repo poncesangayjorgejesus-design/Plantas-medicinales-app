@@ -52,10 +52,10 @@ final class PlantCatalog {
 
     void explore(LinearLayout page) {
         ui.label(page, "Catálogo medicinal", 30, INK, true);
-        EditText query = new EditText(context);
-        query.setSingleLine(true);
-        query.setHint("Nombre común o científico");
-        page.addView(query);
+        EditText query = ui.input(
+                page,
+                "Nombre común o científico"
+        );
         LinearLayout rows = ui.column();
         page.addView(rows);
         Runnable refresh = () -> {

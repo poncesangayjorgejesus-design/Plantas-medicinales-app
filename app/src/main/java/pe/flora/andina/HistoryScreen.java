@@ -46,11 +46,12 @@ final class HistoryScreen {
     void show(LinearLayout page) {
         ui.label(page, "Historial de consultas", 30, INK, true);
 
-        EditText search = new EditText(context);
-        search.setSingleLine(true);
-        search.setHint("Buscar por nombre común o científico");
+        EditText search = ui.input(
+                page,
+                "Buscar por nombre común o científico"
+        );
+
         search.setText(historyQuery);
-        page.addView(search);
 
         ui.action(page, historyDate == null
                         ? "Filtrar por fecha"
