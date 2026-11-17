@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="18dp" android:layout_marginBottom="14dp" android:elevation="2dp">
+    <TextView android:id="@+id/history_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/plant_name" style="@style/TextHeading"/>
+    <TextView android:id="@+id/history_scientific" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/scientific" style="@style/TextMeta"/>
+    <TextView android:id="@+id/history_metadata" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/empty" style="@style/TextMeta"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/history_photo_container"/>
+    <Button android:id="@+id/history_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/open_detail" style="@style/ActionButton"/>
+    <Button android:id="@+id/delete_consultation" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/delete_consultation" style="@style/DangerButton"/>
+</LinearLayout>
