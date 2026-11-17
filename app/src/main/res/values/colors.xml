@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="forest">#174D38</color>
+    <color name="green">#287653</color>
+    <color name="ink">#24352D</color>
+    <color name="paper">#F7F8F0</color>
+    <color name="sage">#DCE9DA</color>
+    <color name="white">#FFFFFF</color>
+    <color name="muted">#718078</color>
+    <color name="border">#E1E8DF</color>
+    <color name="danger">#A94B42</color>
+    <color name="track">#E0EAE2</color>
+    <color name="caution">#B56B32</color>
+</resources>

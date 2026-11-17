@@ -1,27 +1,51 @@
 package pe.flora.andina;
 
 import android.content.SharedPreferences;
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.*;
-import android.widget.*;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.activity.ComponentActivity;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.FileProvider;
+
+import pe.flora.andina.data.HistoryStore;
+import pe.flora.andina.data.PhotoStore;
+import pe.flora.andina.data.PlantRepository;
+import pe.flora.andina.model.ConfirmationResult;
+import pe.flora.andina.model.PlantMatch;
+import pe.flora.andina.model.RecognitionResult;
+import pe.flora.andina.recognition.RecognitionController;
+import pe.flora.andina.ui.CatalogScreen;
+import pe.flora.andina.ui.HistoryPhotos;
+import pe.flora.andina.ui.HistoryScreen;
+import pe.flora.andina.ui.RecognitionResults;
+import pe.flora.andina.ui.ScreenUi;
+import pe.flora.andina.ui.SettingsScreen;
+import pe.flora.andina.util.AppConstants;
+
 import java.io.File;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import static pe.flora.andina.ScreenUi.*;
-
+/** Punto de entrada: navega entre pantallas y coordina captura, análisis y persistencia. */
 public class MainActivity extends ComponentActivity {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private LinearLayout root, page;
     private SharedPreferences prefs;
     private ScreenUi ui;
-    private PlantCatalog catalog;
+    private CatalogScreen catalog;
+    private PlantRepository plantRepository;
+    private RecognitionResults recognitionResults;
     private HistoryStore historyStore;
     private HistoryScreen historyScreen;
     private SettingsScreen settingsScreen;
@@ -30,37 +54,62 @@ public class MainActivity extends ComponentActivity {
     private Uri cameraUri, photoUri;
     private Bitmap photo;
     private boolean busy;
-    private Recognizer.Result result;
+    private RecognitionResult result;
     private String error = "";
     private int tab;
     private String resultId = "", confirmedPlant = "";
 
-    private final ActivityResultLauncher<String> gallery = registerForActivityResult(
-            new ActivityResultContracts.GetContent(), uri -> { if (uri != null) load(uri); });
-    private final ActivityResultLauncher<Uri> camera = registerForActivityResult(
-            new ActivityResultContracts.TakePicture(), ok -> { if (ok && cameraUri != null) load(cameraUri); });
+    private final ActivityResultLauncher<String> gallery =
+            registerForActivityResult(
+                    new ActivityResultContracts.GetContent(),
+                    uri -> {
+                        if (uri != null) load(uri);
+                    });
+    private final ActivityResultLauncher<Uri> camera =
+            registerForActivityResult(
+                    new ActivityResultContracts.TakePicture(),
+                    ok -> {
+                        if (ok && cameraUri != null) load(cameraUri);
+                    });
 
-    @Override public void onCreate(Bundle state) {
+    @Override
+    public void onCreate(Bundle state) {
         super.onCreate(state);
-        prefs = getSharedPreferences("flora", MODE_PRIVATE);
+        initializeModules();
         if (state != null) cameraUri = state.getParcelable("capture");
-        ui = new ScreenUi(this);
-        catalog = new PlantCatalog(this, ui);
-        photos = new PhotoStore(this);
-        historyStore = new HistoryStore(this, prefs, catalog, photos);
-        historyScreen = new HistoryScreen(this, ui, historyStore, catalog,
-                new HistoryPhotos(this, ui, photos), () -> show(2));
-        settingsScreen = new SettingsScreen(this, ui, prefs);
-        recognition = new RecognitionController(this, prefs, worker, ui, photos);
         show(0);
     }
 
-    @Override protected void onSaveInstanceState(Bundle state) {
+    /** Crea una instancia de cada repositorio y conecta las pantallas que lo utilizan. */
+    private void initializeModules() {
+        prefs = getSharedPreferences(AppConstants.PREFERENCES_NAME, MODE_PRIVATE);
+        ui = new ScreenUi(this);
+        plantRepository = new PlantRepository(this);
+        catalog = new CatalogScreen(this, ui, plantRepository);
+        recognitionResults = new RecognitionResults(this, ui);
+        photos = new PhotoStore(this);
+        historyStore = new HistoryStore(prefs, plantRepository, photos);
+        historyScreen =
+                new HistoryScreen(
+                        this,
+                        ui,
+                        historyStore,
+                        catalog,
+                        plantRepository,
+                        new HistoryPhotos(this, ui, photos),
+                        () -> show(2));
+        settingsScreen = new SettingsScreen(this, ui, prefs);
+        recognition = new RecognitionController(this, prefs, worker, photos);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle state) {
         super.onSaveInstanceState(state);
         state.putParcelable("capture", cameraUri);
     }
 
-    @Override protected void onDestroy() {
+    @Override
+    protected void onDestroy() {
         worker.shutdownNow();
         if (catalog != null) catalog.close();
         super.onDestroy();
@@ -68,77 +117,89 @@ public class MainActivity extends ComponentActivity {
 
     private void show(int next) {
         tab = next;
-        root = ui.column();
-        root.setBackgroundColor(PAPER);
-        root.setOnApplyWindowInsetsListener((view, insets) -> {
-            view.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
-                    insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
-            return insets.  consumeSystemWindowInsets();
-        });
-        setContentView(root);
+        setContentView(R.layout.activity_main);
+        root = findViewById(R.id.root);
+        page = findViewById(R.id.page_content);
+        root.setOnApplyWindowInsetsListener(
+                (view, insets) -> {
+                    view.setPadding(
+                            insets.getSystemWindowInsetLeft(),
+                            insets.getSystemWindowInsetTop(),
+                            insets.getSystemWindowInsetRight(),
+                            insets.getSystemWindowInsetBottom());
+                    return insets.consumeSystemWindowInsets();
+                });
         root.requestApplyInsets();
-
-        ScrollView scroll = new ScrollView(this);
-        root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
-        page = ui.column();
-        page.setPadding(ui.dp(20), ui.dp(16), ui.dp(20), ui.dp(16));
-        scroll.addView(page);
-        ui.label(page, "FLORA ANDINA", 14, GREEN, true);
         switch (next) {
             case 0 -> scan();
             case 1 -> catalog.explore(page);
             case 2 -> historyScreen.show(page);
             case 3 -> {
                 settingsScreen.show(page);
-                historyScreen.addClearButton(page, () -> {
-                    resultId = "";
-                    confirmedPlant = "";
-                    show(2);
-                });
+                historyScreen.addClearButton(
+                        page,
+                        () -> {
+                            resultId = "";
+                            confirmedPlant = "";
+                            show(2);
+                        });
             }
         }
-
-        LinearLayout nav = new LinearLayout(this);
-        nav.setBackgroundColor(0xffE1ECDD);
-        root.addView(nav);
-        String[] names = {"Escanear", "Explorar", "Historial", "Ajustes"};
-        for (int i = 0; i < names.length; i++) {
+        int[] ids = {R.id.nav_scan, R.id.nav_catalog, R.id.nav_history, R.id.nav_settings};
+        for (int i = 0; i < ids.length; i++) {
             int destination = i;
-            Button button = new Button(this, null, android.R.attr.borderlessButtonStyle);
-            button.setText(names[i]);
-            button.setTextSize(12);
-            button.setTextColor(i == next ? GREEN : INK);
+            Button button = findViewById(ids[i]);
             button.setSelected(i == next);
-            button.setAllCaps(false);
-            button.setPadding(0, 0, 0, 0);
-            if (i == next) button.setTypeface(null, Typeface.BOLD);
+            button.setTypeface(null, i == next ? Typeface.BOLD : Typeface.NORMAL);
             button.setOnClickListener(v -> show(destination));
-            nav.addView(button, new LinearLayout.LayoutParams(0, ui.dp(56), 1));
         }
     }
 
     private void scan() {
-        ui.label(page, "Identifica una planta", 30, INK, true);
-        LinearLayout hero = ui.card(page, GREEN);
-        ui.label(hero, "Fotografía hojas o flores", 23, -1, true);
-        ui.label(hero, "Enfoca una sola planta. Acércate y evita sombras fuertes.", 16, 0xffE1ECDD, false);
-        if (photo != null) {
-            ImageView preview = new ImageView(this);
-            preview.setImageBitmap(photo);
-            preview.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            preview.setContentDescription("Foto que se analizará");
-            page.addView(preview, new LinearLayout.LayoutParams(-1, ui.dp(210)));
+        View screen = ui.inflate(R.layout.screen_scan, page);
+        ImageView preview = screen.findViewById(R.id.photo_preview);
+        preview.setVisibility(photo == null ? View.GONE : View.VISIBLE);
+        preview.setImageBitmap(photo);
+        Button cameraButton = screen.findViewById(R.id.camera_button);
+        cameraButton.setEnabled(!busy);
+        cameraButton.setOnClickListener(v -> capture());
+        Button galleryButton = screen.findViewById(R.id.gallery_button);
+        galleryButton.setEnabled(!busy);
+        galleryButton.setOnClickListener(v -> gallery.launch("image/*"));
+        Button analyzeButton = screen.findViewById(R.id.analyze_button);
+        analyzeButton.setVisibility(photo == null ? View.GONE : View.VISIBLE);
+        analyzeButton.setEnabled(!busy);
+        analyzeButton.setText(busy ? R.string.analyzing : R.string.analyze);
+        analyzeButton.setOnClickListener(v -> identify());
+        screen.findViewById(R.id.loading_message)
+                .setVisibility(busy && photo == null ? View.VISIBLE : View.GONE);
+        TextView errorView = screen.findViewById(R.id.error_message);
+        errorView.setText(error);
+        errorView.setVisibility(error.isEmpty() ? View.GONE : View.VISIBLE);
+        recognitionResults.show(
+                screen.findViewById(R.id.results_container),
+                result,
+                catalog,
+                plantRepository,
+                resultId,
+                confirmedPlant,
+                this::confirmPlant);
+    }
+
+    /** La persistencia informa un estado; los mensajes y la navegación pertenecen a la Activity. */
+    private void confirmPlant(PlantMatch match) {
+        ConfirmationResult confirmation = historyStore.confirmMatch(resultId, match);
+        int message =
+                switch (confirmation.status()) {
+                    case SAVED -> R.string.plant_saved;
+                    case NOT_FOUND -> R.string.consultation_missing;
+                    case FAILED -> R.string.plant_save_failed;
+                };
+        if (confirmation.status() == ConfirmationResult.Status.SAVED) {
+            confirmedPlant = confirmation.species();
+            show(0);
         }
-        ui.action(page, "Abrir cámara", this::capture).setEnabled(!busy);
-        ui.action(page, "Elegir de la galería", () -> gallery.launch("image/*")).setEnabled(!busy);
-        if (photo != null) ui.action(page, busy ? "Analizando…" : "Analizar foto", this::identify).setEnabled(!busy);
-        if (busy && photo == null) ui.label(page, "Cargando imagen…", 16, GREEN, true);
-        if (!error.isEmpty()) ui.label(page, error, 16, 0xff8B382B, true);
-        recognition.showResults(page, result, catalog, resultId, confirmedPlant,
-                match -> historyStore.confirmMatch(resultId, match, species -> {
-                    confirmedPlant = species;
-                    show(0);
-                }));
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void capture() {
@@ -164,44 +225,61 @@ public class MainActivity extends ComponentActivity {
         confirmedPlant = "";
         error = "";
         show(0);
-        worker.execute(() -> {
-            try {
-                Bitmap bitmap = ImageDecoder.decodeBitmap(ImageDecoder.createSource(getContentResolver(), uri),
-                        (decoder, info, source) -> {
-                            decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE);
-                            int largest = Math.max(info.getSize().getWidth(), info.getSize().getHeight());
-                            decoder.setTargetSampleSize(Math.max(1, (int) Math.ceil(largest / 1280.0)));
-                        });
-                finishWork(() -> { photo = bitmap; photoUri = uri; });
-            } catch (Exception e) {
-                finishWork(() -> error = "No se pudo abrir la foto. Prueba con otra imagen.");
-            }
-        });
+        worker.execute(
+                () -> {
+                    try {
+                        Bitmap bitmap =
+                                ImageDecoder.decodeBitmap(
+                                        ImageDecoder.createSource(getContentResolver(), uri),
+                                        (decoder, info, source) -> {
+                                            decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE);
+                                            int largest =
+                                                    Math.max(
+                                                            info.getSize().getWidth(),
+                                                            info.getSize().getHeight());
+                                            decoder.setTargetSampleSize(
+                                                    Math.max(1, (int) Math.ceil(largest / 1280.0)));
+                                        });
+                        finishWork(
+                                () -> {
+                                    photo = bitmap;
+                                    photoUri = uri;
+                                });
+                    } catch (Exception e) {
+                        finishWork(
+                                () -> error = "No se pudo abrir la foto. Prueba con otra imagen.");
+                    }
+                });
     }
 
     private void finishWork(Runnable update) {
-        runOnUiThread(() -> {
-            if (isDestroyed() || isFinishing()) return;
-            busy = false;
-            update.run();
-            if (tab == 0) show(0);
-        });
+        runOnUiThread(
+                () -> {
+                    if (isDestroyed() || isFinishing()) return;
+                    busy = false;
+                    update.run();
+                    if (tab == 0) show(0);
+                });
     }
 
     private void identify() {
-        recognition.request(photo, this::startAnalysis,
+        recognition.request(
+                photo,
+                this::startAnalysis,
                 analysis -> {
-                    finishWork(() -> {
-                        result = analysis.result();
-                        error = analysis.error();
-                        if (!analysis.id().isEmpty()) {
-                            if (historyStore.record(analysis.id(), result)) resultId = analysis.id();
-                            else {
-                                error = "No se pudo guardar la consulta.";
-                                photos.delete(analysis.id());
-                            }
-                        }
-                    });
+                    finishWork(
+                            () -> {
+                                result = analysis.result();
+                                error = analysis.error();
+                                if (!analysis.id().isEmpty()) {
+                                    if (historyStore.record(analysis.id(), result))
+                                        resultId = analysis.id();
+                                    else {
+                                        error = "No se pudo guardar la consulta.";
+                                        photos.delete(analysis.id());
+                                    }
+                                }
+                            });
                     if (tab == 2 && !analysis.id().isEmpty()) show(2);
                 },
                 message -> finishWork(() -> error = message));

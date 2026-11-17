@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+        <TextView android:id="@+id/detail_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/plant_name" style="@style/TextHeading"/>
+        <TextView android:id="@+id/detail_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/empty" style="@style/TextBody"/>
+        <Button android:id="@+id/speak_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/speak" style="@style/ActionButton"/>
+        <Button android:id="@+id/stop_speech" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/stop_speech" style="@style/SecondaryButton"/>
+        <Button android:id="@+id/close_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/close" style="@style/SecondaryButton"/>
+    </LinearLayout>
+</ScrollView>
