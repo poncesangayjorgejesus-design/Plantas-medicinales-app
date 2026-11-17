@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+    <TextView android:id="@+id/score_text" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/empty" style="@style/TextMeta"/>
+    <ProgressBar android:id="@+id/score_progress" android:layout_width="match_parent" android:layout_height="14dp" android:max="1000" android:progress="0" android:progressTint="@color/green" android:progressBackgroundTint="@color/track" android:layout_marginBottom="12dp" style="?android:attr/progressBarStyleHorizontal"/>
+</LinearLayout>

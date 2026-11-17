@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+    <TextView android:id="@+id/scan_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/scan_title" style="@style/TextTitle"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_hero" android:padding="18dp" android:layout_marginBottom="14dp">
+        <TextView android:id="@+id/hero_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/hero_title" android:textColor="@color/white" style="@style/TextHeading"/>
+        <TextView android:id="@+id/hero_help" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/hero_help" android:textColor="@color/sage" style="@style/TextBody"/>
+    </LinearLayout>
+    <ImageView android:id="@+id/photo_preview" android:layout_width="match_parent" android:layout_height="210dp" android:scaleType="fitCenter" android:contentDescription="@string/preview" android:visibility="gone"/>
+    <Button android:id="@+id/camera_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/camera" style="@style/ActionButton"/>
+    <Button android:id="@+id/gallery_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/gallery" style="@style/ActionButton"/>
+    <Button android:id="@+id/analyze_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/analyze" style="@style/ActionButton"/>
+    <TextView android:id="@+id/loading_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/loading" android:visibility="gone" style="@style/TextMeta"/>
+    <TextView android:id="@+id/error_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/empty" android:textColor="@color/danger" android:visibility="gone" style="@style/TextBody"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/results_container"/>
+</LinearLayout>

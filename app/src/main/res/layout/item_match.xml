@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="18dp" android:layout_marginBottom="14dp" android:elevation="2dp">
+    <TextView android:id="@+id/match_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/plant_name" style="@style/TextHeading"/>
+    <TextView android:id="@+id/match_scientific" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/scientific" style="@style/TextMeta"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/score_container"/>
+    <Button android:id="@+id/match_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/view_detail" style="@style/ActionButton"/>
+    <TextView android:id="@+id/no_local_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/no_local_detail" style="@style/TextMeta"/>
+    <Button android:id="@+id/confirm_match" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/confirm_match" style="@style/ActionButton"/>
+</LinearLayout>

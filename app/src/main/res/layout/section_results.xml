@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+    <TextView android:id="@+id/results_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/results_title" style="@style/TextHeading"/>
+    <TextView android:id="@+id/uncertain_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/uncertain" style="@style/TextBody"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/match_rows"/>
+    <TextView android:id="@+id/caution_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/caution" style="@style/TextMeta"/>
+</LinearLayout>
